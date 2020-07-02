@@ -88,10 +88,10 @@ const (
 // +kubebuilder:resource:scope=Namespaced,shortName=scheduledsparkapp,singular=scheduledsparkapplication
 
 type ScheduledSparkApplication struct {
-	metav1.TypeMeta                        `json:",inline"`
-	metav1.ObjectMeta                      `json:"metadata"`
-	Spec   ScheduledSparkApplicationSpec   `json:"spec"`
-	Status ScheduledSparkApplicationStatus `json:"status,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata"`
+	Spec              ScheduledSparkApplicationSpec   `json:"spec"`
+	Status            ScheduledSparkApplicationStatus `json:"status,omitempty"`
 }
 
 type ConcurrencyPolicy string
@@ -157,9 +157,9 @@ type ScheduledSparkApplicationStatus struct {
 
 // ScheduledSparkApplicationList carries a list of ScheduledSparkApplication objects.
 type ScheduledSparkApplicationList struct {
-	metav1.TypeMeta                   `json:",inline"`
-	metav1.ListMeta                   `json:"metadata,omitempty"`
-	Items []ScheduledSparkApplication `json:"items,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ScheduledSparkApplication `json:"items,omitempty"`
 }
 
 // +genclient
@@ -170,10 +170,10 @@ type ScheduledSparkApplicationList struct {
 
 // SparkApplication represents a Spark application running on and using Kubernetes as a cluster manager.
 type SparkApplication struct {
-	metav1.TypeMeta               `json:",inline"`
-	metav1.ObjectMeta             `json:"metadata"`
-	Spec   SparkApplicationSpec   `json:"spec"`
-	Status SparkApplicationStatus `json:"status,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata"`
+	Spec              SparkApplicationSpec   `json:"spec"`
+	Status            SparkApplicationStatus `json:"status,omitempty"`
 }
 
 // SparkApplicationSpec describes the specification of a Spark application using Kubernetes as a cluster manager.
@@ -338,7 +338,7 @@ type SparkApplicationStatus struct {
 	// AppState tells the overall application state.
 	AppState ApplicationState `json:"applicationState,omitempty"`
 	// ExecutorState records the state of executors by executor Pod names.
-	ExecutorState map[string]ExecutorState `json:"executorState,omitempty"`
+	ExecutorState map[string]string `json:"executorState,omitempty"`
 	// ExecutionAttempts is the total number of attempts to run a submitted application to completion.
 	// Incremented upon each attempted run of the application and reset upon invalidation.
 	ExecutionAttempts int32 `json:"executionAttempts,omitempty"`
@@ -351,9 +351,9 @@ type SparkApplicationStatus struct {
 
 // SparkApplicationList carries a list of SparkApplication objects.
 type SparkApplicationList struct {
-	metav1.TypeMeta          `json:",inline"`
-	metav1.ListMeta          `json:"metadata,omitempty"`
-	Items []SparkApplication `json:"items,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []SparkApplication `json:"items,omitempty"`
 }
 
 // Dependencies specifies all possible types of dependencies of a Spark application.

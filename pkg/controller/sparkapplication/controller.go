@@ -418,7 +418,7 @@ func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) er
 			if !exists || newState != convertToExecutorState(oldState) {
 				c.recordExecutorEvent(app, newState, pod.Name)
 			}
-			executorStateMap[pod.Name] = convertFromExecutorState(newState, pod.CreationTimestamp, pod.DeletionTimestamp)
+			executorStateMap[pod.Name] = convertFromExecutorState(newState, pod.CreationTimestamp, *pod.DeletionTimestamp)
 
 			if executorApplicationID == "" {
 				executorApplicationID = getSparkApplicationID(pod)
@@ -447,10 +447,10 @@ func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) er
 			// successfully. The executor pods terminate and are cleaned up, so we could not found
 			// the executor pod, under this circumstances, we assume the executor pod are completed.
 			if app.Status.AppState.State == v1beta2.SucceedingState {
-				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorCompletedState, metav1.Now())
+				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorCompletedState, metav1.NewTime(time.Now()))
 			} else {
 				glog.Infof("Executor pod %s not found, assuming it was deleted.", name)
-				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState, metav1.Now())
+				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState,  metav1.NewTime(time.Now()))
 			}
 		}
 	}

@@ -666,7 +666,7 @@ func (in *SparkApplicationStatus) DeepCopyInto(out *SparkApplicationStatus) {
 	out.AppState = in.AppState
 	if in.ExecutorState != nil {
 		in, out := &in.ExecutorState, &out.ExecutorState
-		*out = make(map[string]ExecutorState, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}

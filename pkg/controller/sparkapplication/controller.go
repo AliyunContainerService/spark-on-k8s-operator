@@ -372,14 +372,14 @@ func convertToExecutorState(stateWithTimestamp string) v1beta2.ExecutorState {
 	}
 	return ""
 }
-func convertFromExecutorState(state v1beta2.ExecutorState, start metav1.Time, end metav1.Time) string {
+func convertFromExecutorState(state v1beta2.ExecutorState, start metav1.Time, end *metav1.Time) string {
 	arr := make([]string, 0)
 	arr = append(arr, fmt.Sprintf("%s|", state))
 	if !start.IsZero() {
 		arr = append(arr, fmt.Sprintf("Start: %d", start.Second()))
 		arr = append(arr, "-")
 	}
-	if !end.IsZero() {
+	if end != nil && !end.IsZero() {
 		arr = append(arr, fmt.Sprintf("End: %d", end.Second()))
 	}
 	return strings.Join(arr, "")
@@ -418,7 +418,7 @@ func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) er
 			if !exists || newState != convertToExecutorState(oldState) {
 				c.recordExecutorEvent(app, newState, pod.Name)
 			}
-			executorStateMap[pod.Name] = convertFromExecutorState(newState, pod.CreationTimestamp, *pod.DeletionTimestamp)
+			executorStateMap[pod.Name] = convertFromExecutorState(newState, pod.CreationTimestamp, pod.DeletionTimestamp)
 
 			if executorApplicationID == "" {
 				executorApplicationID = getSparkApplicationID(pod)
@@ -450,7 +450,7 @@ func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) er
 				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorCompletedState, metav1.NewTime(time.Now()))
 			} else {
 				glog.Infof("Executor pod %s not found, assuming it was deleted.", name)
-				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState,  metav1.NewTime(time.Now()))
+				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState, metav1.NewTime(time.Now()))
 			}
 		}
 	}

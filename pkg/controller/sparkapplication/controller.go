@@ -376,11 +376,11 @@ func convertFromExecutorState(state v1beta2.ExecutorState, start metav1.Time, en
 	arr := make([]string, 0)
 	arr = append(arr, fmt.Sprintf("%s|", state))
 	if !start.IsZero() {
-		arr = append(arr, fmt.Sprintf("Start: %d", start.Second()))
+		arr = append(arr, fmt.Sprintf("Start: %d", start.Unix()))
 		arr = append(arr, "-")
 	}
 	if end != nil && !end.IsZero() {
-		arr = append(arr, fmt.Sprintf("End: %d", end.Second()))
+		arr = append(arr, fmt.Sprintf("End: %d", end.Unix()))
 	}
 	return strings.Join(arr, "")
 }
@@ -392,9 +392,13 @@ func fixExecutorStateWhenPanic(origin string, state v1beta2.ExecutorState, end m
 		newStateArr := make([]string, 0)
 		newStateArr = append(newStateArr, fmt.Sprintf("%s|", state))
 		if len(arr) == 2 {
-			newStateArr = append(newStateArr, arr[1], "-", fmt.Sprintf("End: %d", end.Second()))
+			if strings.Contains(arr[1], "End") {
+				return origin
+			} else {
+				newStateArr = append(newStateArr, arr[1], "-", fmt.Sprintf("End: %d", end.Unix()))
+			}
 		} else {
-			newStateArr = append(newStateArr, fmt.Sprintf("Start: %d-End: %d", end.Second(), end.Second()))
+			newStateArr = append(newStateArr, fmt.Sprintf("Start: %d-End: %d", end.Unix(), end.Unix()))
 		}
 		return strings.Join(newStateArr, "")
 	}

@@ -366,41 +366,47 @@ func convertToExecutorState(stateWithTimestamp string) v1beta2.ExecutorState {
 	if len(stateWithTimestamp) == 0 {
 		return ""
 	}
-
-	if arr := strings.Split(stateWithTimestamp, "|"); len(arr) >= 1 {
-		return v1beta2.ExecutorState(arr[0])
+	// uuid: State:Running Start:UTC End:UTC
+	if arr := strings.Split(stateWithTimestamp, " "); len(arr) >= 1 {
+		podState := arr[0]
+		if len(podState) != 0 {
+			podStatePair := strings.Split(podState, ":")
+			if len(podStatePair) == 2 {
+				return v1beta2.ExecutorState(podStatePair[1])
+			}
+		}
 	}
 	return ""
 }
 func convertFromExecutorState(state v1beta2.ExecutorState, start metav1.Time, end *metav1.Time) string {
 	arr := make([]string, 0)
-	arr = append(arr, fmt.Sprintf("%s|", state))
+	arr = append(arr, fmt.Sprintf("State:%s", state))
 	if !start.IsZero() {
-		arr = append(arr, fmt.Sprintf("Start: %d", start.Unix()))
-		arr = append(arr, "-")
+		arr = append(arr, fmt.Sprintf("Start:%v", start.Truncate(0)))
 	}
 	if end != nil && !end.IsZero() {
-		arr = append(arr, fmt.Sprintf("End: %d", end.Unix()))
+		arr = append(arr, fmt.Sprintf("End:%v", end.Truncate(0)))
 	}
-	return strings.Join(arr, "")
+	return strings.Join(arr, " ")
 }
 
 func fixExecutorStateWhenPanic(origin string, state v1beta2.ExecutorState, end metav1.Time) string {
-	if arr := strings.Split(origin, "|"); len(arr) == 0 {
-		return fmt.Sprintf("%s|", state)
+	if arr := strings.Split(origin, " "); len(arr) == 1 {
+		return fmt.Sprintf("State:%s Start:%v End:%v", state, end.Truncate(0), end.Truncate(0))
 	} else {
 		newStateArr := make([]string, 0)
-		newStateArr = append(newStateArr, fmt.Sprintf("%s|", state))
+		newStateArr = append(newStateArr, fmt.Sprintf("State:%s", state))
 		if len(arr) == 2 {
-			if strings.Contains(arr[1], "End") {
-				return origin
+			if strings.Contains(arr[1], "Start") {
+				newStateArr = append(newStateArr, arr[1])
+				newStateArr = append(newStateArr, fmt.Sprintf("End:%v", end.Truncate(0)))
 			} else {
-				newStateArr = append(newStateArr, arr[1], "-", fmt.Sprintf("End: %d", end.Unix()))
+				newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Truncate(0), end.Truncate(0)))
 			}
 		} else {
-			newStateArr = append(newStateArr, fmt.Sprintf("Start: %d-End: %d", end.Unix(), end.Unix()))
+			newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Truncate(0), end.Truncate(0)))
 		}
-		return strings.Join(newStateArr, "")
+		return strings.Join(newStateArr, " ")
 	}
 }
 

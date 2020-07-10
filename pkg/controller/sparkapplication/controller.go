@@ -382,29 +382,29 @@ func convertFromExecutorState(state v1beta2.ExecutorState, start metav1.Time, en
 	arr := make([]string, 0)
 	arr = append(arr, fmt.Sprintf("State:%s", state))
 	if !start.IsZero() {
-		arr = append(arr, fmt.Sprintf("Start:%v", start.Truncate(0)))
+		arr = append(arr, fmt.Sprintf("Start:%v", start.Format(time.RFC3339)))
 	}
 	if end != nil && !end.IsZero() {
-		arr = append(arr, fmt.Sprintf("End:%v", end.Truncate(0)))
+		arr = append(arr, fmt.Sprintf("End:%v", end.Format(time.RFC3339)))
 	}
 	return strings.Join(arr, " ")
 }
 
 func fixExecutorStateWhenPanic(origin string, state v1beta2.ExecutorState, end metav1.Time) string {
 	if arr := strings.Split(origin, " "); len(arr) == 1 {
-		return fmt.Sprintf("State:%s Start:%v End:%v", state, end.Truncate(0), end.Truncate(0))
+		return fmt.Sprintf("State:%s Start:%v End:%v", state, end.Format(time.RFC3339), end.Format(time.RFC3339))
 	} else {
 		newStateArr := make([]string, 0)
 		newStateArr = append(newStateArr, fmt.Sprintf("State:%s", state))
 		if len(arr) == 2 {
 			if strings.Contains(arr[1], "Start") {
 				newStateArr = append(newStateArr, arr[1])
-				newStateArr = append(newStateArr, fmt.Sprintf("End:%v", end.Truncate(0)))
+				newStateArr = append(newStateArr, fmt.Sprintf("End:%v", end.Format(time.RFC3339)))
 			} else {
-				newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Truncate(0), end.Truncate(0)))
+				newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Format(time.RFC3339), end.Format(time.RFC3339)))
 			}
 		} else {
-			newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Truncate(0), end.Truncate(0)))
+			newStateArr = append(newStateArr, fmt.Sprintf("Start:%v End:%v", end.Format(time.RFC3339), end.Format(time.RFC3339)))
 		}
 		return strings.Join(newStateArr, " ")
 	}

@@ -380,6 +380,8 @@ spec:
                             type: string
                           type: array
                       type: object
+                    dnsPolicy:
+                      type: string
                     env:
                       items:
                         properties:
@@ -962,7 +964,7 @@ spec:
                       type: string
                     memoryOverhead:
                       type: string
-                    nodeName:omitempty:
+                    nodeName:
                       type: string
                     nodeSelector:
                       additionalProperties:
@@ -1837,6 +1839,8 @@ spec:
                             type: string
                           type: array
                       type: object
+                    dnsPolicy:
+                      type: string
                     env:
                       items:
                         properties:
@@ -2423,7 +2427,7 @@ spec:
                       type: string
                     memoryOverhead:
                       type: string
-                    nodeName:omitempty:
+                    nodeName:
                       type: string
                     nodeSelector:
                       additionalProperties:

@@ -59,3 +59,8 @@ func IsDriverPod(pod *apiv1.Pod) bool {
 func IsExecutorPod(pod *apiv1.Pod) bool {
 	return pod.Labels[config.SparkRoleLabel] == config.SparkExecutorRole
 }
+
+// isHostNetwork returns the network type
+func IsHostNetwork(pod *apiv1.Pod) bool {
+	return pod.Spec.HostNetwork
+}

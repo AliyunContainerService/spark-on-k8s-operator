@@ -63,6 +63,8 @@ func patchSparkPod(pod *corev1.Pod, app *v1beta2.SparkApplication) []patchOperat
 	patchOps = append(patchOps, addEnvVars(pod, app)...)
 	patchOps = append(patchOps, addEnvFrom(pod, app)...)
 	patchOps = append(patchOps, addNodeName(pod, app)...)
+	patchOps = append(patchOps, addDnsPolicy(pod, app)...)
+	patchOps = append(patchOps, addAnnotations(pod, app)...)
 
 	op := addSchedulerName(pod, app)
 	if op != nil {
@@ -178,29 +180,52 @@ func addVolumeMount(pod *corev1.Pod, mount corev1.VolumeMount) patchOperation {
 func addEnvVars(pod *corev1.Pod, app *v1beta2.SparkApplication) []patchOperation {
 	var envVars []corev1.EnvVar
 	var containerName string
+
+	envVarsExist := make([]corev1.EnvVar, 0)
+	for _, container := range pod.Spec.Containers {
+		if container.Name == config.SparkDriverContainerName || containerName == config.SparkExecutorContainerName {
+			// set default values
+			envVarsExist = container.Env
+		}
+	}
+
 	if util.IsDriverPod(pod) {
 		envVars = app.Spec.Driver.Env
 		containerName = config.SparkDriverContainerName
-
 		envVarsDeprecated := app.Spec.Driver.EnvVars
 
 		for k, v := range envVarsDeprecated {
-			envVars = append(envVars, corev1.EnvVar{
-				Name:  k,
-				Value: v,
-			})
+			found := false
+			for _, env := range envVarsExist {
+				if env.Name == k {
+					found = true
+				}
+			}
+			if found == false {
+				envVars = append(envVars, corev1.EnvVar{
+					Name:  k,
+					Value: v,
+				})
+			}
 		}
 	} else if util.IsExecutorPod(pod) {
 		envVars = app.Spec.Executor.Env
 		containerName = config.SparkExecutorContainerName
-
 		envVarsDeprecated := app.Spec.Executor.EnvVars
 
 		for k, v := range envVarsDeprecated {
-			envVars = append(envVars, corev1.EnvVar{
-				Name:  k,
-				Value: v,
-			})
+			found := false
+			for _, env := range envVarsExist {
+				if env.Name == k {
+					found = true
+				}
+			}
+			if found == false {
+				envVars = append(envVars, corev1.EnvVar{
+					Name:  k,
+					Value: v,
+				})
+			}
 		}
 	}
 
@@ -624,6 +649,43 @@ func addNodeName(pod *corev1.Pod, app *v1beta2.SparkApplication) []patchOperatio
 
 	var ops []patchOperation
 	ops = append(ops, patchOperation{Op: "add", Path: "/spec/nodeName", Value: nodeName})
+	// For Pods with hostNetwork, explicitly set its DNS policy  to “ClusterFirstWithHostNet”
+	// Detail: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+	return ops
+}
+
+func addDnsPolicy(pod *corev1.Pod, app *v1beta2.SparkApplication) []patchOperation {
+	var ops []patchOperation
+	var dnsPolicy corev1.DNSPolicy
+	if util.IsDriverPod(pod) && !util.IsHostNetwork(pod) {
+		dnsPolicy = app.Spec.Driver.DNSPolicy
+	}
+
+	if util.IsExecutorPod(pod) && !util.IsHostNetwork(pod) {
+		dnsPolicy = app.Spec.Executor.DNSPolicy
+	}
+
+	if dnsPolicy != "" {
+		ops = append(ops, patchOperation{Op: "add", Path: "/spec/dnsPolicy", Value: dnsPolicy})
+	}
+		return ops
+}
+
+func addAnnotations(pod *corev1.Pod, app *v1beta2.SparkApplication) []patchOperation {
+	var annotations map[string]string
+	if util.IsDriverPod(pod) {
+		annotations = app.Spec.Driver.Annotations
+	}
+	if util.IsExecutorPod(pod) {
+		annotations = app.Spec.Executor.Annotations
+	}
+
+	if annotations == nil {
+		return nil
+	}
+
+	var ops []patchOperation
+	ops = append(ops, patchOperation{Op: "add", Path: "/metadata/annotations", Value: annotations})
 	// For Pods with hostNetwork, explicitly set its DNS policy  to “ClusterFirstWithHostNet”
 	// Detail: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
 	return ops

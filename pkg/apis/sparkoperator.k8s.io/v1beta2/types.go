@@ -450,7 +450,10 @@ type SparkPodSpec struct {
 	DNSConfig *apiv1.PodDNSConfig `json:"dnsConfig,omitempty"`
 	// NodeName is kubernetes node name to be added to the driver and executor pods.
 	// +optional
-	NodeName *string `json:"nodeName:omitempty"`
+	NodeName *string `json:"nodeName,omitempty"`
+	// DnsPolicy settings for pod.
+	// +optional
+	DNSPolicy apiv1.DNSPolicy `json:"dnsPolicy,omitempty"`
 }
 
 // DriverSpec is specification of the driver.

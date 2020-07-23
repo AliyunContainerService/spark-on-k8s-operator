@@ -410,6 +410,14 @@ func fixExecutorStateWhenPanic(origin string, state v1beta2.ExecutorState, end m
 	}
 }
 
+// some pods would miss end timestamp
+func notFoundEndTimestamp(oldStatus string) bool {
+	if strings.Contains(oldStatus, "End") {
+		return true
+	}
+	return false
+}
+
 // getAndUpdateExecutorState lists the executor pods of the application
 // and updates the executor state based on the current phase of the pods.
 func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) error {
@@ -462,6 +470,8 @@ func (c *Controller) getAndUpdateExecutorState(app *v1beta2.SparkApplication) er
 				glog.Infof("Executor pod %s not found, assuming it was deleted.", name)
 				app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState, metav1.NewTime(time.Now()))
 			}
+		} else if !exists && notFoundEndTimestamp(oldStatus) {
+			app.Status.ExecutorState[name] = fixExecutorStateWhenPanic(app.Status.ExecutorState[name], v1beta2.ExecutorFailedState, metav1.NewTime(time.Now()))
 		}
 	}
 
